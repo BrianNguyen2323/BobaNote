@@ -8,7 +8,7 @@ Each MVP phase is owned by one team. A team is one or more agent sessions workin
 |---|---|---|---|
 | 0. Foundation | [`web-foundation/`](web-foundation/LOG.md) | `phase-0/web-foundation` | In progress |
 
-The iOS build-loop team (`teams/build-loop/`, branch `phase-0/build-loop`) was retired when the project moved to the web. Its log is in git history at commit `99e4590`.
+The iOS build-loop team was retired when the project moved to the web. Its log and code are in git history at commit `9bc4b3d` on `main`.
 
 ## How to take over a team
 
