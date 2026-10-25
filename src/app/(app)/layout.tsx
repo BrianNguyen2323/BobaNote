@@ -10,7 +10,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         <AccountLine />
       </Suspense>
       {children}
-      <TabBar />
+      <Suspense fallback={null}>
+        <TabBar />
+      </Suspense>
     </div>
   );
 }
