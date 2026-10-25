@@ -82,3 +82,18 @@ body {
 @utility pb-tab-bar {
   padding-bottom: calc(env(safe-area-inset-bottom) + 6.5rem);
 }
+
+/* Error text. The dark value is lighter so it stays readable on the dark surface. */
+:root {
+  --danger: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --danger: #ff9b94;
+  }
+}
+
+@theme inline {
+  --color-danger: var(--danger);
+}
