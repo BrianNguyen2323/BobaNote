@@ -30,7 +30,7 @@ export function DrinkNameField({ value, onChange, suggestions, error }: Props) {
         />
         {matches.length > 0 && (
           // mousedown would blur the input and unmount the list before the click lands.
-          <ul aria-label="Past drinks" className="glass absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-glass" onMouseDown={(e) => e.preventDefault()}>
+          <ul aria-label="Past drinks" className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-glass bg-surface shadow-lg ring-1 ring-ink-muted/30" onMouseDown={(e) => e.preventDefault()}>
             {matches.map((name) => (
               <li key={name}>
                 <button

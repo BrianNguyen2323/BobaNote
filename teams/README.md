@@ -8,6 +8,7 @@ Each MVP phase is owned by one team. A team is one or more agent sessions workin
 |---|---|---|---|
 | 0. Foundation | [`web-foundation/`](web-foundation/LOG.md) | `phase-0/web-foundation` | In progress |
 | 1. Data shell | [`data-shell/`](data-shell/LOG.md) | `phase-1/data-shell` | In progress |
+| 2. Log form | [`log-form/`](log-form/LOG.md) | `phase-2/log-form` | In progress |
 
 The iOS build-loop team was retired when the project moved to the web. Its log and code are in git history at commit `9bc4b3d` on `main`.
 
