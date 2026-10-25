@@ -4,7 +4,7 @@ Branch: `phase-3/history`, branched from `main` at `e3a04fa`. Goal: the `/histor
 
 ## Status
 
-Code is done. Lint, tests, and build pass locally, and the page was checked live at 390x844. Waiting on CI and review. The owner merges into `main`.
+Code is done. Lint, tests, and build pass locally, and the page was checked live at 390x844. CI is green. Waiting on review. The owner merges into `main`.
 
 ## Done when
 
@@ -12,7 +12,7 @@ Code is done. Lint, tests, and build pass locally, and the page was checked live
 - [x] `DrinkCard`.
 - [x] `/history` with day grouping, Edit, Log again, and two-step Delete.
 - [x] Checked live in light and dark mode.
-- [ ] CI green on the final commit.
+- [x] CI green on the final commit.
 
 ## Provides
 
@@ -33,3 +33,4 @@ Code is done. Lint, tests, and build pass locally, and the page was checked live
 
 - **2026-10-25.** Added `deleteDrinkAction`, `DrinkCard`, and the history page with 5 new tests. Lint is clean, tests pass, and the build succeeds.
 - **2026-10-25.** Live check at 390x844, light and dark, on port 3203 with 4 drinks (shops "E2E History ...", all deleted afterwards). Grouping and order, cards with and without rating, Edit and save back to `/history`, Log again prefill, Delete then Cancel, Delete then Confirm (gone after reload), and the empty state all worked. Not seen: a failed delete message.
+- **2026-10-25.** CI green on `c777a97`: https://github.com/BrianNguyen2323/BobaNote/actions/runs/40173155336
