@@ -8,19 +8,19 @@ Boba Note started as an iOS app. In October 2026 the owner switched it to a Next
 
 A web app for logging boba drinks and seeing habits over time: how many drinks per week/month/year, top drinks by frequency, and a full history list. It must work well on a phone browser first, then on desktop.
 
-**Audience for v1:** personal use and friends. Development is local for now. Deployment to Netlify comes later. Don't build for scale, monetization, or SEO.
+**Audience for v1:** personal use and friends. Users sign in with Google, and the owner invites each friend by adding them as a test user in Google Cloud. Development is local for now. Deployment to Netlify comes later. Don't build for scale, monetization, or SEO.
 
 ## MVP scope (build in this order)
 
-0. **Foundation.** Next.js + Tailwind scaffold, the taro theme, the first liquid glass components, the first tested logic module, and CI. Done when `npm run dev` shows the style preview page and CI is green.
-1. **Local persistence** in the browser's `localStorage` as one JSON document, plus a hidden debug page and **JSON export and import**. No accounts, no backend, no login in v1. Export is in the MVP because it is the only backup. Clearing site data, switching browsers, or switching devices loses everything else.
+0. **Foundation.** Next.js + Tailwind scaffold, the taro theme, the first liquid glass components, Google sign-in through Supabase, the `drink_logs` table with row level security, the server-side Google Places search, and CI. Done when the owner signs in with Google locally, sees the style preview page, and CI is green.
+1. **Drink data module.** Typed functions in `src/lib/` that create, read, update, and delete the signed-in user's drinks in Supabase, plus a hidden debug page that shows the row count and the last error.
 2. **Log a drink** flow, styled like typical boba ordering apps (card-based, tappable choices, minimal typing). In this phase the shop is a free-text name. Phase 5 adds search results to the same field.
 3. **History list** of all drinks, newest first, with delete, edit (reuses the log form), and **log again** (prefills the log form from a past entry with today's date). Filters are post-MVP.
 4. **Stats** page.
    - A Week / Month / Year picker with back and forward arrows. Periods are calendar periods (this week, October, 2026), not rolling windows.
    - Bars per day for week and month. Bars per month for year.
    - Top drinks are ranked within the selected period, grouped by normalized drink name only. The same drink name at two shops counts as one drink.
-5. **Nearby shops**, used when picking a shop while logging. The data source is undecided (see Open questions).
+5. **Nearby shops** in the log form, using the existing `/api/places` route (Google Places Text Search). Ask for the browser's location only when the user taps "Nearby".
 
 **Cut first if time is short:** the yearly anniversary recap. It is explicitly post-MVP. Do not build it, but keep data queryable by year so it is easy to add.
 
@@ -42,34 +42,40 @@ A web app for logging boba drinks and seeing habits over time: how many drinks p
 
 - **Framework:** Next.js 16 (App Router) with TypeScript and React 19. This Next.js version differs from older training data. Read `AGENTS.md` and the matching guide in `node_modules/next/dist/docs/` before using a Next.js API.
 - **Styling:** Tailwind CSS v4. The theme lives in `src/app/globals.css` (`@theme` tokens and the `glass` utility). There is no `tailwind.config.js` in v4.
-- **Persistence:** `localStorage`, one JSON document under a single versioned key. See the data model below.
+- **Auth:** Supabase Auth with the Google provider. No other auth library. Sign-in and sign-out are Server Actions in `src/app/auth/actions.ts`. `/auth/callback` finishes the sign-in. `src/proxy.ts` refreshes the session on every request and sends signed-out visitors to `/login`. Next.js 16 renamed `middleware.ts` to `proxy.ts`.
+- **Database:** Supabase Postgres, table `drink_logs`. Schema changes are SQL files in `supabase/migrations/`, named `<timestamp>_<name>.sql`. The owner applies each one by pasting it into the Supabase SQL editor. No Supabase CLI, no Docker.
+- **Shop search:** Google Places API (New) Text Search, called only from the server in `src/lib/places.ts` through the `/api/places` route.
+- **Supabase packages:** `@supabase/supabase-js` and `@supabase/ssr`, using the `getAll` and `setAll` cookie pattern.
+- **Environment variables:** listed with instructions in `.env.example`. Real values go in `.env.local`, which git ignores. `src/lib/env.ts` reads them and throws a clear error when one is missing.
 - **Charts:** plain Tailwind bars first (a bar is a `div` with a height). Add a chart library only if the stats page needs axes or interaction that divs can't do, and ask first.
 - **Tests:** Vitest (`npm test`). Test files sit next to the code as `*.test.ts`.
 - **Node:** version 22, pinned in `.nvmrc`. CI and Netlify both read it.
 - **No other dependencies in v1** unless clearly justified. Ask before adding any package.
-- **Architecture:** pages and components contain layout only. Logic lives in plain TypeScript modules in `src/lib/` that import nothing from React or Next.js, so Vitest can test them directly.
+- **Architecture:** pages and components contain layout only. Logic lives in TypeScript modules in `src/lib/`. Keep pure logic (parsing, stats, date math) in functions that take plain values, so Vitest can test them without Next.js or a network. Inside `src/lib/`, import sibling modules with relative paths (`./env`), because Vitest does not resolve the `@/` alias.
 
 ## Data model
 
-One record type, `DrinkLog`. There is no topping or shop table.
+One table, `drink_logs`, defined in `supabase/migrations/20261024000000_create_drink_logs.sql`. There is no topping or shop table. The phase 1 data module maps each row to a camelCase `DrinkLog` type in one place.
 
-| Field | Type | Notes |
+| Column | Type | Notes |
 |---|---|---|
-| `id` | `string` | From `crypto.randomUUID()`. |
-| `drinkName` | `string` | As typed. Normalize only when grouping. |
-| `date` | `string` | Local calendar day as `YYYY-MM-DD`. Strings in this format sort by date. |
-| `size` | `string` | `"S"`, `"M"`, `"L"`, or custom text. |
-| `sugarPercent` | `number` | Integer. |
-| `icePercent` | `number` | Integer. |
-| `toppings` | `string[]` | Preset or custom names. |
-| `rating` | `number \| null` | 1 to 10, or `null` when skipped. |
-| `shopName` | `string` | |
-| `shopAddress` | `string \| null` | |
-| `shopLatitude` | `number \| null` | |
-| `shopLongitude` | `number \| null` | |
-| `shopPlaceId` | `string \| null` | ID from the shop search provider, once phase 5 picks one. |
+| `id` | `uuid` | Generated by the database. |
+| `user_id` | `uuid` | Defaults to the signed-in user (`auth.uid()`). Deleting the user deletes their rows. |
+| `drink_name` | `text` | As typed. Normalize only when grouping. |
+| `date` | `date` | Local calendar day. Supabase returns it as a `YYYY-MM-DD` string. |
+| `size` | `text` | `"S"`, `"M"`, `"L"`, or custom text. |
+| `sugar_percent` | `smallint` | 0 or more. |
+| `ice_percent` | `smallint` | 0 or more. |
+| `toppings` | `text[]` | Preset or custom names. |
+| `rating` | `smallint`, nullable | 1 to 10, or `null` when skipped. |
+| `shop_name` | `text` | |
+| `shop_address` | `text`, nullable | |
+| `shop_latitude` | `double precision`, nullable | |
+| `shop_longitude` | `double precision`, nullable | |
+| `shop_place_id` | `text`, nullable | Google Places ID when the shop came from search. |
+| `created_at` | `timestamptz` | Set by the database. |
 
-The stored document is `{ "version": 1, "drinks": DrinkLog[] }`. Export writes the same document to a file, and import reads it back.
+**Row level security** is on. Policies let a signed-in user select, insert, update, and delete only rows where `user_id` is their own ID. The database enforces this even if app code has a bug, so never turn RLS off or put the Supabase secret key in the app.
 
 Design rules to avoid debt:
 - **Snapshot the shop on each `DrinkLog`** so history survives if a shop closes or the search provider's data changes. A "recent shops" list is derived from past logs, the same way drink-name autosuggest is.
@@ -77,21 +83,23 @@ Design rules to avoid debt:
 - **Store sugar/ice as integer percent**, not enums, so custom values work. Presets are just UI.
 - **Never store computed stats.** Counts and top-drink rankings are derived from `DrinkLog` records.
 - **Normalize drink names** with `normalizeDrinkName` in `src/lib/drinkName.ts` (trim, collapse inner whitespace, lowercase) when computing "top drinks".
-- **Dates are days, not instants.** Keep `date` as a `YYYY-MM-DD` string built from the user's local date. Don't store a `Date` or a UTC timestamp, because converting one back to a day can shift it across midnight. Week, month, and year boundaries are computed from these strings in `src/lib/`, with tests.
-- **Parse the stored document at the boundary.** Reading `localStorage` or an imported file is untrusted input. Validate it once when loading. If it fails, show the error on the debug page and never overwrite the stored data with an empty list.
-- Schema changes: adding a new optional field is safe. Bump `version` and write a migration for renames or removals. Ask before changing the schema.
+- **Dates are days, not instants.** Send and receive `date` as a `YYYY-MM-DD` string built from the user's local date. Never pass a JavaScript `Date` or a UTC timestamp, because converting one back to a day can shift it across midnight. Week, month, and year boundaries are computed from these strings in `src/lib/`, with tests.
+- **Parse external data at the boundary.** Query parameters, form input, and Google Places responses are untrusted. Parse them once where they enter (see `parseShopSearch` and `parsePlacesResponse` in `src/lib/places.ts`) and pass typed values inward.
+- Schema changes: every change is a new SQL file in `supabase/migrations/`. Never edit a file that has already been applied. Ask before changing the schema.
 
 ## Technical debt rules (the important part)
 
-1. **One module owns persistence.** `src/lib/` holds the load, save, export, and import code. Components call it and never touch `localStorage` directly. Don't add an interface or adapter until a second backend, such as sync, actually exists.
-2. **No accounts yet.** If sync is added later, it goes behind that persistence module. Don't leak auth into components.
+1. **One module owns drink data.** Phase 1 adds it in `src/lib/`. Pages and components call it and never query Supabase directly. Don't add an interface or adapter until a second backend actually exists.
+2. **Auth stays in its own files:** `src/proxy.ts`, `src/lib/auth.ts` (`getCurrentUser`), and `src/app/auth/`. The proxy redirect is a convenience, not security. Every Server Action and Route Handler checks the user again, and RLS is the final guard.
 3. **No arbitrary values in components.** Colors, radii, and fonts come from the theme tokens in `globals.css`, used through Tailwind classes (`bg-accent`, `text-ink-muted`, `rounded-glass`). No `bg-[#...]` or `p-[13px]`. Add a token when a value is missing. English text in components is fine. v1 is not localized.
 4. **No giant components.** Split once a file passes roughly 150 lines.
 5. **Handle location permission states** (prompt, denied, unavailable) with real fallbacks. Manual shop search must always work without location.
 6. **Don't scrape boba shop websites/apps.** The future "import real menus" idea is post-MVP and legally/technically brittle.
 7. **Write unit tests for the stats logic** (counts, date boundaries, top-N ranking). That's the part most likely to have subtle bugs.
 8. **Small commits, one feature per branch,** and keep `main` always buildable.
-9. **Browser storage code runs only on the client.** `localStorage` does not exist during server rendering. Components that read it need `"use client"` and must read it after mount, so the first render matches the server's HTML.
+9. **Secrets stay on the server.** Only variables prefixed `NEXT_PUBLIC_` reach the browser, and those must be safe to publish (the Supabase URL and publishable key). `GOOGLE_PLACES_API_KEY` must never get that prefix.
+10. **Reading the session needs a `<Suspense>` boundary.** Cache Components is on, so a component that calls `getCurrentUser()` or reads `cookies()` or `searchParams` must sit inside `<Suspense>`. Otherwise the build fails. See `node_modules/next/dist/docs/01-app/02-guides/authentication-with-cache-components.md`.
+11. **Places calls cost money.** Keep the field mask in `src/lib/places.ts` to id, name, address, and location. Asking for ratings, photos, or hours moves every call to a more expensive tier. Never call Places on every keystroke. Search when the user submits.
 
 ## Post-MVP backlog (do NOT build yet)
 
@@ -100,7 +108,7 @@ Design rules to avoid debt:
 - Price per drink, then spending stats (store price as integer cents, optional)
 - Nutrition info (calories/sugar), likely requiring structured menu data
 - Shop menu integration so users tap a menu item and adjust sugar/ice/toppings
-- Accounts + cloud sync (decide the backend when needed)
+- JSON export of a user's drinks
 - Installable PWA (home screen icon, offline support)
 - Share cards, CSV export
 
@@ -112,11 +120,11 @@ The owner develops on Windows with VS Code. Everything runs locally.
 - To test on a phone, run `npm run dev -- -H 0.0.0.0` and open `http://<PC's LAN IP>:3000` on a phone on the same Wi-Fi. Windows Firewall may ask to allow Node.
 - Before pushing, run `npm run lint`, `npm test`, and `npm run build`. CI runs the same three on every push.
 - On a CI failure, read the logs with the GitHub CLI (`gh run list`, `gh run view <id> --log-failed`), fix, and push again. Do not declare a task done until CI is green. `gh` is installed at `~/bin/gh.exe` and needs `gh auth login` once.
-- Do not store secrets in the repo. When an API key is needed (phase 5), it goes in `.env.local`, which git ignores.
+- Secrets never go in the repo. Copy `.env.example` to `.env.local` and fill it in. The README section "Connect the services" walks through every value. CI builds without any secrets.
 
 ### Deploying later (Netlify)
 
-Not set up yet. Netlify builds Next.js apps with its own adapter and reads the Node version from `.nvmrc`. Cache Components (enabled in `next.config.ts`) needs the Node.js runtime, which Netlify provides. Verify Netlify's current Next.js 16 support before the first deploy.
+Not set up yet. Netlify builds Next.js apps with its own adapter and reads the Node version from `.nvmrc`. Cache Components (enabled in `next.config.ts`) needs the Node.js runtime, which Netlify provides. Verify Netlify's current Next.js 16 support before the first deploy. On deploy, add the three `.env.local` variables in Netlify's site settings, add the Netlify URL plus `/auth/callback` to Supabase's redirect URLs, and add the Netlify origin to the Google OAuth client's authorized JavaScript origins.
 
 ## Working style with Claude Code
 
@@ -146,13 +154,14 @@ Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenn
 
 - App name: **Boba Note**
 - Platform: Next.js web app, local development now, Netlify later
-- Persistence: browser `localStorage`, one versioned JSON document
+- Sign-in: Google through Supabase Auth. Every page requires sign-in. Friends are invited as Google Cloud test users.
+- Storage: Supabase Postgres with row level security. Migrations applied in the SQL editor.
+- Shop search: Google Places API (New) Text Search, server-side only
 - Palette: taro purple accent, white surfaces, liquid glass panels
 - Stats use calendar periods. Top drinks are ranked within the selected period and grouped by drink name only.
 - Rating is optional, 1 to 10. Drink date is a day, not a time.
 
 ## Open questions
 
-- Nearby shop data source for phase 5. OpenStreetMap (Overpass API) is free and needs no key, but its coverage of boba shops varies. Google Places has the best data, but it needs a billing account, an API key, and a server-side proxy. Apple MapKit JS needs the paid Apple Developer Program.
-- Safari can delete `localStorage` for a site that the user hasn't visited in 7 days of browser use. Decide in phase 1 whether to request persistent storage (`navigator.storage.persist()`), push the owner toward regular exports, or both.
+- Free Supabase projects may pause after about a week with no activity (unverified). Data is kept, but the owner must restore the project in the dashboard. Revisit before friends rely on the app.
 - App icon. `src/app/icon.svg` is a placeholder.
