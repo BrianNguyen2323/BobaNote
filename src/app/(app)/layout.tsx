@@ -23,7 +23,7 @@ async function AccountLine() {
     <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-5 pt-3 text-sm">
       <span className="truncate text-ink-muted">Signed in as {user.name ?? user.email}</span>
       <form action={signOut}>
-        <button type="submit" className="min-h-11 rounded-full px-3 font-semibold text-accent-ink">
+        <button type="submit" className="min-h-11 shrink-0 whitespace-nowrap rounded-full px-3 font-semibold text-accent-ink">
           Sign out
         </button>
       </form>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { deleteDrinkAction } from "@/app/(app)/drinks/actions";
-import { accentButtonClass, pillButtonClass } from "@/components/log/Field";
+import { pillButtonClass } from "@/components/log/Field";
 
 const linkClass = `${pillButtonClass} inline-flex items-center`;
 
@@ -29,8 +29,8 @@ export function DrinkActions({ id }: { id: string }) {
       <div className="flex flex-wrap gap-2">
         {confirming ? (
           <>
-            <button type="button" onClick={remove} disabled={pending} className={`${accentButtonClass} min-h-11 py-2.5`}>
-              {pending ? "Deleting..." : "Confirm"}
+            <button type="button" onClick={remove} disabled={pending} className={`${pillButtonClass} font-semibold text-danger`}>
+              {pending ? "Deleting..." : "Delete drink"}
             </button>
             <button type="button" onClick={() => setConfirming(false)} disabled={pending} className={pillButtonClass}>
               Cancel

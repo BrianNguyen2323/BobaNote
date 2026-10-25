@@ -78,8 +78,10 @@ CI runs the same three commands on every push. It needs no secrets.
 - `src/app/` holds the pages. `globals.css` holds the theme tokens and the `glass` utility.
 - `src/app/auth/` holds sign-in, sign-out, and the Google callback. `src/proxy.ts` refreshes the session and redirects signed-out visitors.
 - `src/app/api/places/` is the shop search endpoint.
-- `src/components/` holds the reusable UI components.
-- `src/lib/` holds TypeScript logic and its tests.
+- `src/app/(app)/` holds the signed-in pages: Log (`/`), History, Stats, the edit page, and the hidden `/debug` page. `drinks/actions.ts` holds the save and delete Server Actions.
+- `src/components/` holds the reusable UI components. `log/` holds the log form and `stats/` the stats view.
+- `src/lib/` holds TypeScript logic and its tests. `drinks.ts` owns all drink reads and writes, and `stats.ts` owns the period math.
+- `scripts/test-session.mjs` signs the optional test user into `agent-browser` for automated checks.
 - `supabase/migrations/` holds the database schema as SQL files.
 - `teams/` holds the running log for each build phase.
 - `CLAUDE.md` holds the product plan and the project rules.

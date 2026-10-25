@@ -12,6 +12,8 @@ A web app for logging boba drinks and seeing habits over time: how many drinks p
 
 ## MVP scope (build in this order)
 
+**Status (2026-10-25):** phases 0 through 5 are built and merged into `main`. Each phase's decisions and evidence are in `teams/<team>/LOG.md`. New work starts from the post-MVP backlog.
+
 0. **Foundation.** Next.js + Tailwind scaffold, the taro theme, the first liquid glass components, Google sign-in through Supabase, the `drink_logs` table with row level security, the server-side Google Places search, and CI. Done when the owner signs in with Google locally, sees the style preview page, and CI is green.
 1. **Drink data module.** Typed functions in `src/lib/` that create, read, update, and delete the signed-in user's drinks in Supabase, plus a hidden debug page that shows the row count and the last error.
 2. **Log a drink** flow, styled like typical boba ordering apps (card-based, tappable choices, minimal typing). In this phase the shop is a free-text name. Phase 5 adds search results to the same field.
@@ -55,7 +57,7 @@ A web app for logging boba drinks and seeing habits over time: how many drinks p
 
 ## Data model
 
-One table, `drink_logs`, defined in `supabase/migrations/20261024000000_create_drink_logs.sql`. There is no topping or shop table. The phase 1 data module maps each row to a camelCase `DrinkLog` type in one place.
+One table, `drink_logs`, defined in `supabase/migrations/20261024000000_create_drink_logs.sql`. There is no topping or shop table. `src/lib/drinks.ts` maps each row to the camelCase `DrinkLog` type in one place.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -89,7 +91,7 @@ Design rules to avoid debt:
 
 ## Technical debt rules (the important part)
 
-1. **One module owns drink data.** Phase 1 adds it in `src/lib/`. Pages and components call it and never query Supabase directly. Don't add an interface or adapter until a second backend actually exists.
+1. **One module owns drink data.** It is `src/lib/drinks.ts`. Pages and components call it and never query Supabase directly. Don't add an interface or adapter until a second backend actually exists.
 2. **Auth stays in its own files:** `src/proxy.ts`, `src/lib/auth.ts` (`getCurrentUser`), and `src/app/auth/`. The proxy redirect is a convenience, not security. Every Server Action and Route Handler checks the user again, and RLS is the final guard.
 3. **No arbitrary values in components.** Colors, radii, and fonts come from the theme tokens in `globals.css`, used through Tailwind classes (`bg-accent`, `text-ink-muted`, `rounded-glass`). No `bg-[#...]` or `p-[13px]`. Add a token when a value is missing. English text in components is fine. v1 is not localized.
 4. **No giant components.** Split once a file passes roughly 150 lines.
@@ -147,7 +149,7 @@ Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenn
 
 - **Palette:** taro purple accent (`--accent`, `#6f4fa0`) with white and pale lavender surfaces. Dark mode follows the system setting and has its own values for every token. The accent passes WCAG AA contrast with white text.
 - **Liquid glass:** translucent panels with background blur and saturation, a bright top edge, and a soft shadow, over soft taro gradient blobs on the page background. Use the `glass` utility, or `GlassCard` for panels. Apple's lens refraction is out of scope, because Safari can't apply SVG filters in `backdrop-filter`. When the user turns on Reduce Transparency, glass falls back to a solid fill.
-- **Components:** `GlassCard` and `ChipGroup` (single choice, built on native radio inputs so keyboard and screen readers work) exist. Build the rest as reusable components too (multi-select chips for toppings, rating chips, drink card, floating glass tab bar) so the app stays visually consistent.
+- **Components:** reuse what exists before building new ones. `GlassCard`, `ChipGroup` (single choice on native radio inputs), `TabBar`, `DrinkCard`, and `DrinkActions` live in `src/components/`. The log form pieces (`DrinkForm`, `PresetOrCustom`, `ToppingPicker`, `ShopPicker`, `DrinkNameField`) live in `src/components/log/`, and the stats pieces in `src/components/stats/`.
 - **Accessibility:** touch targets at least 44px tall, visible focus rings, text sized in `rem` so browser zoom works, and system fonts (SF Pro on Apple devices).
 - **Icons:** inline SVG until custom artwork exists. Ask before adding an icon package.
 
