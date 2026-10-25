@@ -4,7 +4,7 @@ Branch: `phase-0/build-loop`. Goal: prove that code written on Windows becomes a
 
 ## Status
 
-Files are written and committed. Next step is the first CI run on GitHub Actions. If it fails, read the logs with `gh run view <id> --log-failed`, fix, and push again.
+CI is green. Waiting on the owner to install the `.ipa` from run 40157118203 on the iOS 18.7.8 iPhone through SideStore. If the install fails, record the exact SideStore error here before changing anything.
 
 ## Done when
 
@@ -12,7 +12,7 @@ Files are written and committed. Next step is the first CI run on GitHub Actions
 - [x] `BobaNoteCore` package exists with one tested function.
 - [x] One-screen app imports `BobaNoteCore`.
 - [x] `.github/workflows/ci.yml` runs the core tests, builds an unsigned app, and uploads `BobaNote.ipa`.
-- [ ] CI is green on this branch.
+- [x] CI is green on this branch.
 - [ ] Owner installs the `.ipa` on the iOS 18.7.8 iPhone through SideStore, and the screen shows the commit SHA of that build.
 - [ ] Branch merged into `main`, and the `latest` release on GitHub has the `.ipa`.
 
@@ -39,3 +39,4 @@ Files are written and committed. Next step is the first CI run on GitHub Actions
 ## Log
 
 - **2026-10-24.** Branched `phase-0/build-loop` from `docs/claude-md-plan` (`62a7499`), because `main` does not have CLAUDE.md yet. Merging this branch brings that commit along. Installed the GitHub CLI 2.103.2 at `~/bin/gh.exe` on the owner's PC. It needs `gh auth login` once before it can read CI logs. Wrote `.gitattributes` (LF line endings), `.gitignore`, `project.yml`, `BobaNoteCore`, the one-screen app, and `ci.yml`. No Swift toolchain on this PC, so nothing compiled locally. CI is the first build.
+- **2026-10-24.** First CI run passed on `1c46728`: [run 40157118203](https://github.com/BrianNguyen2323/BobaNote/actions/runs/40157118203). Both jobs (`core-tests` and `app`) succeeded. The run uploaded artifact `BobaNote-1c46728...` (12,468 bytes zipped). Its contents are not inspected yet, because downloading artifacts needs `gh auth login`. The on-device install is the real check.
