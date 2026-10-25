@@ -4,7 +4,7 @@ Branch: `phase-0/web-foundation`. Goal: replace the iOS project with a Next.js +
 
 ## Status
 
-Code is written and checked locally. Next step is the first CI run on GitHub after the push. After CI is green, the owner reviews the style preview with `npm run dev` and merges into `main`.
+CI is green. Waiting on the owner to review the style preview with `npm run dev` and merge into `main`. Phase 1 (persistence) starts after the merge.
 
 ## Done when
 
@@ -15,7 +15,7 @@ Code is written and checked locally. Next step is the first CI run on GitHub aft
 - [x] `normalizeDrinkName` with Vitest tests.
 - [x] `npm run lint`, `npm test`, and `npm run build` pass locally.
 - [x] Page checked in a browser at 390x844, in light and dark mode.
-- [ ] CI green on this branch.
+- [x] CI green on this branch.
 - [ ] Owner approves the look and merges into `main`.
 
 ## Provides
@@ -48,3 +48,4 @@ Code is written and checked locally. Next step is the first CI run on GitHub aft
 
 - **2026-10-24.** Owner switched the project from iOS to a Next.js web app. Branched `phase-0/web-foundation` from `main` (`9bc4b3d`). Removed the iOS files and the `latest` iOS build process. Rewrote `CLAUDE.md`, `README.md`, and `teams/README.md` for the web stack. Added the scaffold, theme, `GlassCard`, `ChipGroup`, presets, `normalizeDrinkName` with two tests, and a Node CI workflow (lint, test, build). Locally, `npm run lint` reported no issues, `npm test` passed 2 of 2, and `npm run build` succeeded. In agent-browser at 390x844, light and dark mode both render. Tapping the ice "25%" chip changed the summary to "M, 50% sugar, 25% ice". The dark-mode screenshot showed the "Style preview" label unreadable, so `accent-ink` was added and the label rechecked.
 - **Not done.** The GitHub `latest` release with the old `BobaNote.ipa`, and the remote branches `docs/claude-md-plan` and `phase-0/build-loop`, still exist. Deleting them is the owner's call.
+- **2026-10-24.** CI passed on `c96d5d0`: [run 40161879031](https://github.com/BrianNguyen2323/BobaNote/actions/runs/40161879031). The `check` job ran lint, tests, and build on Ubuntu with Node from `.nvmrc`.
