@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --surface: #f7f3fb;
+  --ink: #2b2140;
+  --ink-muted: #6b5d80;
+  --accent: #6f4fa0;
+  --accent-ink: #6f4fa0;
+  --on-accent: #ffffff;
+  --blob-1: #c9b2e8;
+  --blob-2: #e8dcf6;
+
+  --glass-fill: rgb(255 255 255 / 0.55);
+  --glass-fill-solid: #fbf9fd;
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-highlight: rgb(255 255 255 / 0.9);
+  --glass-shadow: rgb(74 50 110 / 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #17121f;
+    --ink: #f3eefa;
+    --ink-muted: #b9aecb;
+    --accent-ink: #c9adf0;
+    --blob-1: #4a3570;
+    --blob-2: #2a1f3d;
+
+    --glass-fill: rgb(44 33 62 / 0.5);
+    --glass-fill-solid: #2a2138;
+    --glass-edge: rgb(255 255 255 / 0.14);
+    --glass-highlight: rgb(255 255 255 / 0.18);
+    --glass-shadow: rgb(0 0 0 / 0.4);
+  }
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-glass: 1.75rem;
+}
+
+/* Blur plus saturation works in Safari and Chrome. Apple's lens refraction needs
+   SVG filters inside backdrop-filter, which Safari does not support. */
+@utility glass {
+  background: var(--glass-fill);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 8px 32px var(--glass-shadow);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--glass-fill-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--ink);
+  background:
+    radial-gradient(40rem 40rem at 10% -10%, var(--blob-1), transparent 70%),
+    radial-gradient(36rem 36rem at 110% 30%, var(--blob-2), transparent 70%),
+    radial-gradient(30rem 30rem at 30% 110%, var(--blob-1), transparent 70%),
+    var(--surface);
+  background-attachment: fixed;
+}
