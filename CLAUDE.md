@@ -140,6 +140,7 @@ Design rules to avoid debt:
 - You cannot build locally. Push and check CI (via `gh`) before declaring a task done; report the CI result, not a guess.
 - Make small, frequent pushes so a CI failure points at a small change.
 - Ask when a requirement is ambiguous instead of guessing, especially schema decisions.
+- Each phase team keeps a running log in `teams/<team>/LOG.md`. Read `teams/README.md` and your team's log before starting work, and update the log with every commit and CI result.
 
 ## Pace
 
