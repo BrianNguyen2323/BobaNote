@@ -15,7 +15,7 @@ Code is done and passes lint, tests, and build. Waiting on CI and on the owner a
 - [x] Placeholder `/history` and `/stats` pages.
 - [x] Hidden `/debug` page.
 - [x] Lint, tests, and build pass locally.
-- [ ] CI green.
+- [x] CI green.
 - [ ] Owner applies the migration and opens `/debug` signed in. Not verified: no live DB call ran.
 
 ## Provides
@@ -44,3 +44,4 @@ Code is done and passes lint, tests, and build. Waiting on CI and on the owner a
 
 - **2026-10-24.** Added the data module, date helpers, and tests (`c9b06a4`). Then the route group and tab bar (`74453f9`), then the debug page (`54862a5`). Locally, lint is clean, `npm test` passes 26 of 26, and the build succeeds.
 - **2026-10-24.** Browser check at 390x844 in light and dark mode. Signed-out `/`, `/history`, and `/debug` answer 307 to `/login`, and `/login` renders without a tab bar. **Not verified:** the tab bar, account line, and debug page, because they need a signed-in session and I did not fake one. The phase needs an owner-side check after the migration is applied.
+- **2026-10-24.** CI passed on `2e00d0a`: [run 40170846038](https://github.com/BrianNguyen2323/BobaNote/actions/runs/40170846038).
