@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import type { DrinkLog } from "../../lib/drinks";
-import { bucketCounts, periodLabel, periodRange, shiftAnchor, topDrinks, type Period } from "../../lib/stats";
+import { bucketCounts, periodLabel, periodRange, shiftAnchor, topDrinks, topRatedDrinks, type Period } from "../../lib/stats";
 import { toIsoDay } from "../../lib/dates";
 import { ChipGroup } from "../ChipGroup";
 import { GlassCard } from "../GlassCard";
 import { BarChart } from "./BarChart";
-import { TopDrinks } from "./TopDrinks";
+import { TopDrinks, TopRatedDrinks } from "./TopDrinks";
 
 const PERIODS = [
   { value: "week", label: "Week" },
@@ -48,6 +48,15 @@ export function StatsView({ drinks }: { drinks: DrinkLog[] }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {drinks.length > 0 && (
+        <GlassCard>
+          <p className="text-sm font-semibold text-ink-muted">Lifetime</p>
+          <p className="text-4xl font-bold tracking-tight">
+            {drinks.length} <span className="text-xl font-semibold">total {drinks.length === 1 ? "drink" : "drinks"}</span>
+          </p>
+        </GlassCard>
+      )}
+
       <GlassCard>
         <ChipGroup label="Period" name="period" options={PERIODS} value={period} onChange={setPeriod} />
       </GlassCard>
@@ -80,8 +89,12 @@ export function StatsView({ drinks }: { drinks: DrinkLog[] }) {
             <BarChart buckets={bucketCounts(drinks, period, anchor)} period={period} today={today} />
           </GlassCard>
           <GlassCard>
-            <h2 className="mb-3 text-sm font-semibold text-ink-muted">Top drinks</h2>
+            <h2 className="mb-3 text-sm font-semibold text-ink-muted">Top frequent drinks</h2>
             <TopDrinks drinks={topDrinks(drinks, start, end)} />
+          </GlassCard>
+          <GlassCard>
+            <h2 className="mb-3 text-sm font-semibold text-ink-muted">Your top 3 rated drinks</h2>
+            <TopRatedDrinks drinks={topRatedDrinks(drinks, start, end)} />
           </GlassCard>
         </>
       )}

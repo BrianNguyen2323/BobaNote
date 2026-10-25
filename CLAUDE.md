@@ -22,6 +22,8 @@ A web app for logging boba drinks and seeing habits over time: how many drinks p
    - A Week / Month / Year picker with back and forward arrows. Periods are calendar periods (this week, October, 2026), not rolling windows.
    - Bars per day for week and month. Bars per month for year.
    - Top drinks are ranked within the selected period, grouped by normalized drink name only. The same drink name at two shops counts as one drink.
+   - A Lifetime tile at the top shows the all-time drink count.
+   - "Your top 3 rated drinks" ranks drinks in the selected period by average rating across their rated orders. Skipped ratings don't count toward the average.
 5. **Nearby shops** in the log form, using the existing `/api/places` route (Google Places Text Search). Ask for the browser's location only when the user taps "Nearby".
 
 **Cut first if time is short:** the yearly anniversary recap. It is explicitly post-MVP. Do not build it, but keep data queryable by year so it is easy to add.
