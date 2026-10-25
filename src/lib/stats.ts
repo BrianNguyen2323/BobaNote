@@ -104,33 +104,55 @@ export function bucketCounts(
   }));
 }
 
-/** Top drinks in [start, end], grouped by normalized name. Shows the most recent spelling. Ties: newest drink, then name. */
-export function topDrinks(
-  drinks: Pick<DrinkLog, "date" | "drinkName">[],
-  start: string,
-  end: string,
-  limit = 5,
-): { name: string; count: number }[] {
-  const groups = new Map<string, { name: string; count: number; latest: string }>();
-  for (const { date, drinkName } of drinks) {
+type DrinkSample = Pick<DrinkLog, "date" | "drinkName" | "rating">;
+type NameGroup = { name: string; latest: string; count: number; ratingSum: number; ratedCount: number };
+
+const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** Drinks in [start, end] grouped by normalized name, showing the most recent spelling. */
+function groupByName(drinks: DrinkSample[], start: string, end: string): NameGroup[] {
+  const groups = new Map<string, NameGroup>();
+  for (const { date, drinkName, rating } of drinks) {
     if (date < start || date > end) {
       continue;
     }
     const key = normalizeDrinkName(drinkName);
-    const group = groups.get(key);
+    let group = groups.get(key);
     if (!group) {
-      groups.set(key, { name: drinkName.trim(), count: 1, latest: date });
-    } else {
-      group.count += 1;
-      if (date > group.latest) {
-        group.latest = date;
-        group.name = drinkName.trim();
-      }
+      group = { name: drinkName.trim(), latest: date, count: 0, ratingSum: 0, ratedCount: 0 };
+      groups.set(key, group);
+    } else if (date > group.latest) {
+      group.latest = date;
+      group.name = drinkName.trim();
+    }
+    group.count += 1;
+    if (rating !== null) {
+      group.ratingSum += rating;
+      group.ratedCount += 1;
     }
   }
-  const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-  return [...groups.values()]
+  return [...groups.values()];
+}
+
+/** Most ordered drinks in [start, end]. Ties: newest drink, then name. */
+export function topDrinks(drinks: DrinkSample[], start: string, end: string, limit = 5): { name: string; count: number }[] {
+  return groupByName(drinks, start, end)
     .sort((a, b) => b.count - a.count || cmp(b.latest, a.latest) || cmp(a.name, b.name))
     .slice(0, limit)
     .map(({ name, count }) => ({ name, count }));
+}
+
+export type RatedDrink = { name: string; averageRating: number; ratedCount: number; count: number };
+
+/**
+ * Highest average rating in [start, end]. Skipped ratings don't count toward the average,
+ * so `ratedCount` can be lower than `count`. Ties: more ratings, then newest drink, then name.
+ */
+export function topRatedDrinks(drinks: DrinkSample[], start: string, end: string, limit = 3): RatedDrink[] {
+  return groupByName(drinks, start, end)
+    .filter((g) => g.ratedCount > 0)
+    .map((g) => ({ ...g, averageRating: g.ratingSum / g.ratedCount }))
+    .sort((a, b) => b.averageRating - a.averageRating || b.ratedCount - a.ratedCount || cmp(b.latest, a.latest) || cmp(a.name, b.name))
+    .slice(0, limit)
+    .map(({ name, averageRating, ratedCount, count }) => ({ name, averageRating, ratedCount, count }));
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { bucketCounts, bucketName, periodLabel, periodRange, shiftAnchor, topDrinks } from "./stats";
+import { bucketCounts, bucketName, periodLabel, periodRange, shiftAnchor, topDrinks, topRatedDrinks } from "./stats";
 
-const d = (date: string, drinkName = "x") => ({ date, drinkName });
+const d = (date: string, drinkName = "x", rating: number | null = null) => ({ date, drinkName, rating });
 
 describe("periodRange", () => {
   it("starts the week on Sunday", () => {
@@ -103,5 +103,27 @@ describe("topDrinks", () => {
   it("honors the limit", () => {
     const rows = ["a", "b", "c"].map((n) => d("2026-10-01", n));
     expect(topDrinks(rows, "2026-10-01", "2026-10-31", 2)).toHaveLength(2);
+  });
+});
+
+describe("topRatedDrinks", () => {
+  const oct = ["2026-10-01", "2026-10-31"] as const;
+
+  it("averages every rated order of a drink and ignores skipped ratings", () => {
+    const rows = [d("2026-10-01", "Taro", 10), d("2026-10-02", "taro ", 7), d("2026-10-03", "Taro", null), d("2026-10-04", "Matcha", 8)];
+    expect(topRatedDrinks(rows, ...oct)).toEqual([
+      { name: "Taro", averageRating: 8.5, ratedCount: 2, count: 3 },
+      { name: "Matcha", averageRating: 8, ratedCount: 1, count: 1 },
+    ]);
+  });
+
+  it("leaves out drinks that were never rated and drinks outside the range", () => {
+    const rows = [d("2026-10-05", "Unrated", null), d("2026-09-30", "September", 10), d("2026-10-05", "Kept", 4)];
+    expect(topRatedDrinks(rows, ...oct).map((x) => x.name)).toEqual(["Kept"]);
+  });
+
+  it("keeps the top 3 and breaks average ties by number of ratings", () => {
+    const rows = [d("2026-10-01", "once", 9), d("2026-10-02", "twice", 9), d("2026-10-03", "twice", 9), d("2026-10-04", "low", 2), d("2026-10-05", "best", 10)];
+    expect(topRatedDrinks(rows, ...oct).map((x) => x.name)).toEqual(["best", "twice", "once"]);
   });
 });
