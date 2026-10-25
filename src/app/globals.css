@@ -73,3 +73,12 @@ body {
     var(--surface);
   background-attachment: fixed;
 }
+
+/* Keeps the floating tab bar above the iPhone home indicator, and keeps page content clear of it. */
+@utility tab-bar-position {
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+}
+
+@utility pb-tab-bar {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 6.5rem);
+}
