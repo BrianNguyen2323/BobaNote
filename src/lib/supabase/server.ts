@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "../env";
 
 export async function createClient() {
+  // Supabase compares token expiry with Date.now(). Cache Components needs the render marked request-time first.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl(), supabasePublishableKey(), {

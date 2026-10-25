@@ -132,6 +132,7 @@ Not set up yet. Netlify builds Next.js apps with its own adapter and reads the N
 - Prefer the simplest approach that works; call out anything that will be painful to change later.
 - Run lint, tests, and build locally, then push and check CI before declaring a task done. Report the actual result, not a guess.
 - Verify UI changes in a real browser, at a phone-sized viewport and in both light and dark mode, before declaring them done.
+- To check signed-in pages with `agent-browser`, open any page on the dev server, then run `node scripts/test-session.mjs [baseUrl] | sh`. It signs in the test user from `E2E_TEST_EMAIL` and `E2E_TEST_PASSWORD` in `.env.local` and loads the session cookies into the browser. The app itself stays Google-only.
 - Make small, frequent pushes so a CI failure points at a small change.
 - Ask when a requirement is ambiguous instead of guessing, especially schema decisions.
 - Each phase team keeps a running log in `teams/<team>/LOG.md`. Read `teams/README.md` and your team's log before starting work, and update the log with every commit and CI result.
