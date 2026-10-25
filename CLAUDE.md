@@ -1,143 +1,129 @@
 # CLAUDE.md — Boba Note
 
-Guidance for Claude Code working on this repo. Read fully before making changes. The owner (Brian) is a CS grad student who is **new to iOS/Swift**: explain Apple-specific concepts briefly when introducing them, prefer boring standard solutions, and flag anything that creates technical debt.
+Guidance for Claude Code working on this repo. Read fully before making changes. The owner (Brian) is a CS grad student. Explain framework-specific concepts (Next.js, React, Tailwind) briefly the first time they come up, prefer boring standard solutions, and flag anything that creates technical debt.
+
+Boba Note started as an iOS app. In October 2026 the owner switched it to a Next.js web app. The iOS work (XcodeGen, SwiftUI, SideStore) is gone from the tree. It survives only in git history up to commit `9bc4b3d`.
 
 ## Product
 
-An iOS app for logging boba drinks and seeing habits over time: how many drinks per week/month/year, top drinks by frequency, and a full history list.
+A web app for logging boba drinks and seeing habits over time: how many drinks per week/month/year, top drinks by frequency, and a full history list. It must work well on a phone browser first, then on desktop.
 
-**Audience for v1:** personal use and friends (sideload/TestFlight). Not an App Store launch yet, so don't build for App Store review, monetization, or scale.
+**Audience for v1:** personal use and friends. Development is local for now. Deployment to Netlify comes later. Don't build for scale, monetization, or SEO.
 
 ## MVP scope (build in this order)
 
-0. **Build loop.** Before any feature, land a branch with `project.yml`, a one-screen app, the `BobaNoteCore` package with one passing test, and a GitHub Actions workflow that builds, tests, and uploads an unsigned `.ipa`. The phase is done when the owner installs that `.ipa` on the iOS 18.7.8 iPhone through SideStore.
-1. **Local persistence** in a JSON file, plus the hidden debug screen and a **JSON export** through the share sheet. No accounts, no backend, no login in v1. Export is in the MVP because it is the only backup. Deleting the app, or reinstalling it under a different Apple ID, loses all data.
-2. **Log a drink** flow, styled like typical boba ordering apps (card-based, tappable choices, minimal typing). In this phase the shop is a free-text name. Phase 5 adds MapKit results to the same field.
-3. **History list** of all drinks, newest first, with swipe-to-delete, edit (reuses the log form), and **log again** (prefills the log form from a past entry with today's date). Filters are post-MVP.
-4. **Stats** screen. Use Swift Charts.
+0. **Foundation.** Next.js + Tailwind scaffold, the taro theme, the first liquid glass components, the first tested logic module, and CI. Done when `npm run dev` shows the style preview page and CI is green.
+1. **Local persistence** in the browser's `localStorage` as one JSON document, plus a hidden debug page and **JSON export and import**. No accounts, no backend, no login in v1. Export is in the MVP because it is the only backup. Clearing site data, switching browsers, or switching devices loses everything else.
+2. **Log a drink** flow, styled like typical boba ordering apps (card-based, tappable choices, minimal typing). In this phase the shop is a free-text name. Phase 5 adds search results to the same field.
+3. **History list** of all drinks, newest first, with delete, edit (reuses the log form), and **log again** (prefills the log form from a past entry with today's date). Filters are post-MVP.
+4. **Stats** page.
    - A Week / Month / Year picker with back and forward arrows. Periods are calendar periods (this week, October, 2026), not rolling windows.
    - Bars per day for week and month. Bars per month for year.
    - Top drinks are ranked within the selected period, grouped by normalized drink name only. The same drink name at two shops counts as one drink.
-5. **Nearby shops** via Apple MapKit, used when picking a shop while logging.
+5. **Nearby shops**, used when picking a shop while logging. The data source is undecided (see Open questions).
 
-**Cut first if time is short:** the yearly anniversary recap (needs local notifications + a designed recap screen). It is explicitly post-MVP. Do not build it, but keep data queryable by year so it is easy to add.
+**Cut first if time is short:** the yearly anniversary recap. It is explicitly post-MVP. Do not build it, but keep data queryable by year so it is easy to add.
 
 ## Logging flow
 
 - Shop comes from either:
-  - the **nearby list** (MapKit local search for boba/bubble tea, sorted by distance), or
+  - the **nearby list** (search for boba/bubble tea near the browser's location, sorted by distance), or
   - **manual search by name/location** ("make new entry" for logging later, like Yelp/Apple Maps search), or free-text name as a last resort.
 - Drink fields (v1): shop, drink name, date, size, sugar %, ice level, toppings, rating.
 - **Drink name:** manual text entry with **autosuggest from the user's past entries** (case-insensitive match as they type), so repeat drinks stay consistent and "top drinks" counts don't split on typos or casing.
 - **Size:** preset chips (S / M / L) plus a custom text option, same pattern as sugar/ice and toppings.
 - **Sugar and ice:** preset chips at 0 / 25 / 50 / 75 / 100% plus a custom numeric input.
 - **Toppings:** list of common presets (e.g. tapioca pearls, pudding, grass jelly, lychee jelly, popping boba, cheese foam) plus custom input. Multiple per drink.
-- **Rating:** optional. The user can skip it. When given, it is an Int from 1 to 10, picked from 10 chips. Define the range once in a shared constant.
+- **Rating:** optional. The user can skip it. When given, it is an integer from 1 to 10, picked from 10 chips.
 - **Date:** date only, no time of day. Defaults to today. Allow a past date (the "log later" case).
+- All presets and the rating range live in `src/lib/presets.ts`.
 
 ## Tech stack
 
-- **Language/UI:** Swift, SwiftUI
-- **Persistence:** one JSON file in the app's Documents directory, encoded and decoded with `Codable`. No SwiftData in v1. The app loads the whole file at launch and rewrites it after every change, using an atomic write (`Data.write(to:options: .atomic)`) so a crash mid-save never leaves a half-written file. A missing file means an empty history. A file that fails to decode must not be overwritten. Show the error on the debug screen instead, so no data is lost. Revisit SwiftData only if the app needs CloudKit sync or the history grows far past a few thousand drinks.
-- **Minimum iOS:** 18. Verify the current Xcode version on the GitHub macOS runner before starting.
-- **Charts:** Swift Charts
-- **Location/shops:** CoreLocation (When-In-Use permission only) + MapKit (`MKLocalSearch`). Free, no API key.
-- **No third-party dependencies in v1** unless clearly justified. Ask before adding any package.
-- **Architecture:** MVVM-lite. Views contain layout only. Logic lives in view models or small service types.
+- **Framework:** Next.js 16 (App Router) with TypeScript and React 19. This Next.js version differs from older training data. Read `AGENTS.md` and the matching guide in `node_modules/next/dist/docs/` before using a Next.js API.
+- **Styling:** Tailwind CSS v4. The theme lives in `src/app/globals.css` (`@theme` tokens and the `glass` utility). There is no `tailwind.config.js` in v4.
+- **Persistence:** `localStorage`, one JSON document under a single versioned key. See the data model below.
+- **Charts:** plain Tailwind bars first (a bar is a `div` with a height). Add a chart library only if the stats page needs axes or interaction that divs can't do, and ask first.
+- **Tests:** Vitest (`npm test`). Test files sit next to the code as `*.test.ts`.
+- **Node:** version 22, pinned in `.nvmrc`. CI and Netlify both read it.
+- **No other dependencies in v1** unless clearly justified. Ask before adding any package.
+- **Architecture:** pages and components contain layout only. Logic lives in plain TypeScript modules in `src/lib/` that import nothing from React or Next.js, so Vitest can test them directly.
 
 ## Data model
 
-One record type, `DrinkLog`. There is no `Topping` entity and no `Shop` entity.
+One record type, `DrinkLog`. There is no topping or shop table.
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | `UUID` | |
-| `drinkName` | `String` | As typed. Normalize only when grouping. |
-| `date` | `Date` | Start of the chosen day in the user's calendar. |
-| `size` | `String` | `"S"`, `"M"`, `"L"`, or custom text. |
-| `sugarPercent` | `Int` | |
-| `icePercent` | `Int` | |
-| `toppings` | `[String]` | Preset or custom names. |
-| `rating` | `Int?` | 1 to 10, or `nil` when skipped. |
-| `shopName` | `String` | |
-| `shopAddress` | `String?` | |
-| `shopLatitude` | `Double?` | |
-| `shopLongitude` | `Double?` | |
-| `shopMapItemID` | `String?` | Apple Maps identifier, when the shop came from MapKit. |
+| `id` | `string` | From `crypto.randomUUID()`. |
+| `drinkName` | `string` | As typed. Normalize only when grouping. |
+| `date` | `string` | Local calendar day as `YYYY-MM-DD`. Strings in this format sort by date. |
+| `size` | `string` | `"S"`, `"M"`, `"L"`, or custom text. |
+| `sugarPercent` | `number` | Integer. |
+| `icePercent` | `number` | Integer. |
+| `toppings` | `string[]` | Preset or custom names. |
+| `rating` | `number \| null` | 1 to 10, or `null` when skipped. |
+| `shopName` | `string` | |
+| `shopAddress` | `string \| null` | |
+| `shopLatitude` | `number \| null` | |
+| `shopLongitude` | `number \| null` | |
+| `shopPlaceId` | `string \| null` | ID from the shop search provider, once phase 5 picks one. |
+
+The stored document is `{ "version": 1, "drinks": DrinkLog[] }`. Export writes the same document to a file, and import reads it back.
 
 Design rules to avoid debt:
-- **Snapshot the shop on each `DrinkLog`** so history survives if a shop closes or MapKit data changes. A "recent shops" list is derived from past logs, the same way drink-name autosuggest is.
-- **Preset lists are UI constants.** Toppings, sizes, and sugar and ice presets live in one constants file. A value is custom when it is not in the preset list, so the record does not store an `isCustom` flag.
-- **Store sugar/ice as Int percent**, not enums, so custom values work. Presets are just UI.
-- **Never store computed stats.** Weekly/monthly/yearly counts and top-drink rankings are derived from `DrinkLog` records.
-- **Normalize drink names** (trim, collapse inner whitespace, case-insensitive grouping) when computing "top drinks", otherwise "Brown Sugar Milk Tea" and "brown sugar milk tea" split the count.
-- **Dates are days.** Store `Calendar.current.startOfDay(for:)` of the chosen day, format only in the UI, and use `Calendar` for week/month/year boundaries (don't do date math by hand). Known limit: if the user changes time zones, an old entry can display one day off. That is acceptable for v1.
-- Schema changes: adding a new *optional* field is safe, because `Codable` decodes a missing key as `nil`. Renaming or removing fields needs an explicit migration plan. Ask before changing the schema.
+- **Snapshot the shop on each `DrinkLog`** so history survives if a shop closes or the search provider's data changes. A "recent shops" list is derived from past logs, the same way drink-name autosuggest is.
+- **Preset lists are UI constants.** A value is custom when it is not in the preset list, so the record does not store an `isCustom` flag.
+- **Store sugar/ice as integer percent**, not enums, so custom values work. Presets are just UI.
+- **Never store computed stats.** Counts and top-drink rankings are derived from `DrinkLog` records.
+- **Normalize drink names** with `normalizeDrinkName` in `src/lib/drinkName.ts` (trim, collapse inner whitespace, lowercase) when computing "top drinks".
+- **Dates are days, not instants.** Keep `date` as a `YYYY-MM-DD` string built from the user's local date. Don't store a `Date` or a UTC timestamp, because converting one back to a day can shift it across midnight. Week, month, and year boundaries are computed from these strings in `src/lib/`, with tests.
+- **Parse the stored document at the boundary.** Reading `localStorage` or an imported file is untrusted input. Validate it once when loading. If it fails, show the error on the debug page and never overwrite the stored data with an empty list.
+- Schema changes: adding a new optional field is safe. Bump `version` and write a migration for renames or removals. Ask before changing the schema.
 
 ## Technical debt rules (the important part)
 
-1. **One store type owns persistence.** A concrete `DrinkStore` class (marked `@Observable` so SwiftUI views refresh when it changes) does all reads and writes. Views and view models never read or write the JSON file directly. Don't add a protocol until a second implementation, such as sync, actually exists. Extracting one from `DrinkStore` then is a small refactor.
-2. **No accounts yet.** If sync is added later, it goes behind `DrinkStore`. Don't leak auth into the UI layer.
-3. **No hardcoded colors, spacing, or corner radii in views.** Use a small theme file from the start. English text literals in views are fine. v1 is not localized.
-4. **No giant views.** Split once a view passes roughly 150 lines.
-5. **Handle location permission states** (not determined, denied, restricted) with real fallbacks. Manual shop search must always work without location.
-6. **Don't scrape boba shop websites/apps.** The future "import real menus" idea is post-MVP and legally/technically brittle. Design a `MenuProvider` protocol later; don't build it now.
+1. **One module owns persistence.** `src/lib/` holds the load, save, export, and import code. Components call it and never touch `localStorage` directly. Don't add an interface or adapter until a second backend, such as sync, actually exists.
+2. **No accounts yet.** If sync is added later, it goes behind that persistence module. Don't leak auth into components.
+3. **No arbitrary values in components.** Colors, radii, and fonts come from the theme tokens in `globals.css`, used through Tailwind classes (`bg-accent`, `text-ink-muted`, `rounded-glass`). No `bg-[#...]` or `p-[13px]`. Add a token when a value is missing. English text in components is fine. v1 is not localized.
+4. **No giant components.** Split once a file passes roughly 150 lines.
+5. **Handle location permission states** (prompt, denied, unavailable) with real fallbacks. Manual shop search must always work without location.
+6. **Don't scrape boba shop websites/apps.** The future "import real menus" idea is post-MVP and legally/technically brittle.
 7. **Write unit tests for the stats logic** (counts, date boundaries, top-N ranking). That's the part most likely to have subtle bugs.
 8. **Small commits, one feature per branch,** and keep `main` always buildable.
+9. **Browser storage code runs only on the client.** `localStorage` does not exist during server rendering. Components that read it need `"use client"` and must read it after mount, so the first render matches the server's HTML.
 
 ## Post-MVP backlog (do NOT build yet)
 
-- Yearly anniversary recap (local notification + recap screen)
+- Yearly anniversary recap
 - History filters (by shop, date range, rating, topping)
 - Price per drink, then spending stats (store price as integer cents, optional)
 - Nutrition info (calories/sugar), likely requiring structured menu data
 - Shop menu integration so users tap a menu item and adjust sugar/ice/toppings
-- Accounts + cloud sync (Supabase vs CloudKit; decide when needed)
-- Widgets, share cards
-- CSV export, and importing a JSON export back into the app
+- Accounts + cloud sync (decide the backend when needed)
+- Installable PWA (home screen icon, offline support)
+- Share cards, CSV export
 
 ## Dev environment
 
-**Constraint: the owner develops on Windows with VS Code and has NO usable Mac (the old MacBook is ruled out until the owner says otherwise).** Windows cannot build, run, or sign iOS apps and there is no Xcode, simulator, debugger, or SwiftUI preview locally. The workflow is therefore: write code locally, push to GitHub, let a macOS CI runner build and test, install the result on a real iPhone with SideStore.
+The owner develops on Windows with VS Code. Everything runs locally.
 
-### Build and test loop
+- `npm install` once, then `npm run dev` and open `http://localhost:3000`.
+- To test on a phone, run `npm run dev -- -H 0.0.0.0` and open `http://<PC's LAN IP>:3000` on a phone on the same Wi-Fi. Windows Firewall may ask to allow Node.
+- Before pushing, run `npm run lint`, `npm test`, and `npm run build`. CI runs the same three on every push.
+- On a CI failure, read the logs with the GitHub CLI (`gh run list`, `gh run view <id> --log-failed`), fix, and push again. Do not declare a task done until CI is green. `gh` is installed at `~/bin/gh.exe` and needs `gh auth login` once.
+- Do not store secrets in the repo. When an API key is needed (phase 5), it goes in `.env.local`, which git ignores.
 
-1. Claude Code edits Swift files on Windows and commits to a branch, then pushes.
-2. **GitHub Actions** (macOS runner, current Xcode) builds the app and runs tests. The repo is **public**, so macOS runner minutes are free. Do not store any secrets, Apple ID credentials, or certificates in the repo or in Actions.
-3. On failure, Claude Code reads the logs itself with the GitHub CLI (`gh run list`, `gh run view <id> --log-failed`), fixes the errors, and pushes again. Do not declare a task done until CI is green.
-4. On success, CI produces an **unsigned `.ipa`** (build with code signing disabled, then zip `Payload/BobaNote.app` into an `.ipa`) and attaches it to a GitHub Release or workflow artifact.
-5. The owner downloads the `.ipa` on their iPhone and installs it with **SideStore**, which re-signs it with their free Apple ID.
+### Deploying later (Netlify)
 
-### Project generation (no Xcode on Windows)
-
-- Do not hand-edit an `.xcodeproj`/`project.pbxproj`. Commit a **`project.yml` for XcodeGen** and have CI run `xcodegen generate` before building. The bundle identifier, iOS 18 deployment target, and Info.plist keys (including `NSLocationWhenInUseUsageDescription`) live in `project.yml`. Verify the current XcodeGen syntax before writing it.
-- The bundle identifier is `com.briannguyen.bobanote`. A bundle identifier is the app's permanent ID on the device. iOS keeps an app's data under it, so changing it later installs a separate, empty app.
-
-### Keep logic testable without Apple frameworks
-
-- Put pure logic in a **local Swift package** (e.g. `BobaNoteCore`) that imports only Foundation: plain `struct` models, date-range helpers, stats (weekly/monthly/yearly counts, top-N drinks, name normalization), and autosuggest matching. It must not import SwiftUI, SwiftData, MapKit, or CoreLocation.
-- The `Codable` `DrinkLog` struct and the JSON file read and write code live in `BobaNoteCore`, so their tests run on Windows too. The app's `DrinkStore` only holds the loaded list for SwiftUI and calls into the package to save.
-- Unit tests for this package should run both in CI and, if a Swift toolchain is installed on Windows, locally with `swift test`.
-- Everything that touches SwiftUI/MapKit can only be verified by CI and on-device, so keep views small, add `#Preview` blocks anyway for later, and prefer simple, conventional APIs over clever ones.
-
-### Testing on a real device
-
-- Free Apple ID signing: apps expire after 7 days, with a max of 3 sideloaded apps per device. **SideStore** refreshes apps on-device over any Wi-Fi (not mobile data) using its on-device VPN plus an iOS Shortcuts automation. It needs a computer for initial setup and if it ever fully expires. AltStore is the alternative but only refreshes while AltServer runs on a computer on the same Wi-Fi.
-- Test devices: owner's iPhone on iOS 18.7.8 or iOS 27.0.1 (a friend's is similar). Install on the iOS 18.7.8 phone first. On iOS 18, SideStore setup needs a pairing file generated on a computer.
-- **SideStore on iOS 27 is unverified.** As of October 2026 there is no official SideStore statement. A third-party installer (SideInstaller) claims iOS 27 support, and a SideStore UDID bug was reported on some devices during the iOS 27 beta. These tools are unofficial and can break with iOS updates.
-- The app looks different on the two phones. Apps built with the Xcode 26 SDK get the Liquid Glass system style on iOS 26 and later, while iOS 18 shows the older style. Tab bars, navigation bars, and sheets differ. Custom cards and chips look the same on both.
-- Because there is no simulator, add lightweight on-device diagnostics (a hidden debug screen showing record counts and the last error) and have the app fail visibly instead of crashing silently.
-
-### Not needed for v1
-
-- **Paid Apple Developer Program ($99/yr)** is only required for TestFlight/App Store or capabilities like CloudKit and push notifications. v1 uses neither.
+Not set up yet. Netlify builds Next.js apps with its own adapter and reads the Node version from `.nvmrc`. Cache Components (enabled in `next.config.ts`) needs the Node.js runtime, which Netlify provides. Verify Netlify's current Next.js 16 support before the first deploy.
 
 ## Working style with Claude Code
 
 - Before large changes, propose a short plan and wait for approval.
-- Explain new Apple/Swift concepts in 1-3 sentences the first time they appear.
 - Prefer the simplest approach that works; call out anything that will be painful to change later.
-- You cannot build locally. Push and check CI (via `gh`) before declaring a task done; report the CI result, not a guess.
+- Run lint, tests, and build locally, then push and check CI before declaring a task done. Report the actual result, not a guess.
+- Verify UI changes in a real browser, at a phone-sized viewport and in both light and dark mode, before declaring them done.
 - Make small, frequent pushes so a CI failure points at a small change.
 - Ask when a requirement is ambiguous instead of guessing, especially schema decisions.
 - Each phase team keeps a running log in `teams/<team>/LOG.md`. Read `teams/README.md` and your team's log before starting work, and update the log with every commit and CI result.
@@ -148,25 +134,25 @@ Owner can dedicate 10+ hours/week, so the full MVP (minus the yearly recap) is r
 
 ## Visual style
 
-Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenny, Molly Tea, and Chagee. Take the general feel only: clean, card-based, soft rounded corners, generous whitespace, tea-inspired muted/pastel palette, and large tappable chips for size, sugar, ice, and toppings so logging takes a few taps. **Do not copy any brand's logos, names, fonts, illustrations, or assets.** Boba Note needs its own identity.
+Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenny, Molly Tea, and Chagee, rendered in Apple's Liquid Glass style. Take the general feel only: clean, card-based, soft rounded corners, generous whitespace, and large tappable chips for size, sugar, ice, and toppings so logging takes a few taps. **Do not copy any brand's logos, names, fonts, illustrations, or assets.** Boba Note needs its own identity.
 
-- **Palette:** taro purple as the accent, with white as the main surface color. Dark Mode needs its own variants (a dark surface and a lighter taro accent that stays readable on it). Define both in the theme file.
-- Build reusable components early (chip selector, drink card, section header) so the whole app stays visually consistent.
-- Support Dark Mode and Dynamic Type from the start; retrofitting them later is painful.
-- Use SF Symbols for icons until custom artwork exists.
+- **Palette:** taro purple accent (`--accent`, `#6f4fa0`) with white and pale lavender surfaces. Dark mode follows the system setting and has its own values for every token. The accent passes WCAG AA contrast with white text.
+- **Liquid glass:** translucent panels with background blur and saturation, a bright top edge, and a soft shadow, over soft taro gradient blobs on the page background. Use the `glass` utility, or `GlassCard` for panels. Apple's lens refraction is out of scope, because Safari can't apply SVG filters in `backdrop-filter`. When the user turns on Reduce Transparency, glass falls back to a solid fill.
+- **Components:** `GlassCard` and `ChipGroup` (single choice, built on native radio inputs so keyboard and screen readers work) exist. Build the rest as reusable components too (multi-select chips for toppings, rating chips, drink card, floating glass tab bar) so the app stays visually consistent.
+- **Accessibility:** touch targets at least 44px tall, visible focus rings, text sized in `rem` so browser zoom works, and system fonts (SF Pro on Apple devices).
+- **Icons:** inline SVG until custom artwork exists. Ask before adding an icon package.
 
 ## Decided
 
 - App name: **Boba Note**
-- Minimum iOS version: **18**
-- Bundle identifier: `com.briannguyen.bobanote`
-- Persistence: a Codable JSON file, not SwiftData
-- Palette: taro purple accent, white surfaces
+- Platform: Next.js web app, local development now, Netlify later
+- Persistence: browser `localStorage`, one versioned JSON document
+- Palette: taro purple accent, white surfaces, liquid glass panels
 - Stats use calendar periods. Top drinks are ranked within the selected period and grouped by drink name only.
 - Rating is optional, 1 to 10. Drink date is a day, not a time.
 
 ## Open questions
 
-- Exact SideStore setup path on iOS 27 vs iOS 18.7.8 (verify before first install)
-- App icon
-- Specific screenshots or mockups for the log flow, if the owner has any
+- Nearby shop data source for phase 5. OpenStreetMap (Overpass API) is free and needs no key, but its coverage of boba shops varies. Google Places has the best data, but it needs a billing account, an API key, and a server-side proxy. Apple MapKit JS needs the paid Apple Developer Program.
+- Safari can delete `localStorage` for a site that the user hasn't visited in 7 days of browser use. Decide in phase 1 whether to request persistent storage (`navigator.storage.persist()`), push the owner toward regular exports, or both.
+- App icon. `src/app/icon.svg` is a placeholder.
