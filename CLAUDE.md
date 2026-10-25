@@ -17,7 +17,7 @@ A web app for logging boba drinks and seeing habits over time: how many drinks p
 0. **Foundation.** Next.js + Tailwind scaffold, the taro theme, the first liquid glass components, Google sign-in through Supabase, the `drink_logs` table with row level security, the server-side Google Places search, and CI. Done when the owner signs in with Google locally, sees the style preview page, and CI is green.
 1. **Drink data module.** Typed functions in `src/lib/` that create, read, update, and delete the signed-in user's drinks in Supabase, plus a hidden debug page that shows the row count and the last error.
 2. **Log a drink** flow, styled like typical boba ordering apps (card-based, tappable choices, minimal typing). In this phase the shop is a free-text name. Phase 5 adds search results to the same field.
-3. **History list** of all drinks, newest first, with delete, edit (reuses the log form), and **log again** (prefills the log form from a past entry with today's date). Filters are post-MVP.
+3. **History list** of all drinks, newest first, with delete, edit (reuses the log form), and **log again** (prefills the log form from a past entry with today's date). A Sort dropdown offers newest first (default), oldest first, highest rated, and lowest rated. The choice lives in `?sort=`, and unrated drinks always sort last. Filters are post-MVP.
 4. **Stats** page.
    - A Week / Month / Year picker with back and forward arrows. Periods are calendar periods (this week, October, 2026), not rolling windows.
    - Bars per day for week and month. Bars per month for year.
@@ -149,7 +149,7 @@ Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenn
 
 - **Palette:** taro purple accent (`--accent`, `#6f4fa0`) with white and pale lavender surfaces. Dark mode follows the system setting and has its own values for every token. The accent passes WCAG AA contrast with white text.
 - **Liquid glass:** translucent panels with background blur and saturation, a bright top edge, and a soft shadow, over soft taro gradient blobs on the page background. Use the `glass` utility, or `GlassCard` for panels. Apple's lens refraction is out of scope, because Safari can't apply SVG filters in `backdrop-filter`. When the user turns on Reduce Transparency, glass falls back to a solid fill.
-- **Components:** reuse what exists before building new ones. `GlassCard`, `ChipGroup` (single choice on native radio inputs), `TabBar`, `DrinkCard`, and `DrinkActions` live in `src/components/`. The log form pieces (`DrinkForm`, `PresetOrCustom`, `ToppingPicker`, `ShopPicker`, `DrinkNameField`) live in `src/components/log/`, and the stats pieces in `src/components/stats/`.
+- **Components:** reuse what exists before building new ones. `GlassCard`, `ChipGroup` (single choice on native radio inputs), `TabBar`, `DrinkCard`, and `DrinkActions` live in `src/components/`. `history/SortSelect` is the History sort dropdown. The log form pieces (`DrinkForm`, `PresetOrCustom`, `ToppingPicker`, `ShopPicker`, `DrinkNameField`) live in `src/components/log/`, and the stats pieces in `src/components/stats/`.
 - **Accessibility:** touch targets at least 44px tall, visible focus rings, text sized in `rem` so browser zoom works, and system fonts (SF Pro on Apple devices).
 - **Icons:** inline SVG until custom artwork exists. Ask before adding an icon package.
 

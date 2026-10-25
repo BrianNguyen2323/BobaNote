@@ -2,7 +2,7 @@ import type { DrinkLog } from "./drinks";
 
 export type DayGroup = { day: string; drinks: DrinkLog[] };
 
-/** Groups drinks by day, keeping the input order. Expects newest first, as `listDrinks()` returns. */
+/** Groups adjacent drinks of the same day, keeping the input order (newest or oldest first). */
 export function groupByDay(drinks: DrinkLog[]): DayGroup[] {
   const groups: DayGroup[] = [];
   for (const drink of drinks) {
