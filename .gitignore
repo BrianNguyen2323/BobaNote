@@ -1,0 +1,14 @@
+# XcodeGen output. CI regenerates these from project.yml.
+*.xcodeproj/
+BobaNote/Info.plist
+
+# Build output
+build/
+.build/
+.swiftpm/
+DerivedData/
+Payload/
+*.ipa
+
+xcuserdata/
+.DS_Store

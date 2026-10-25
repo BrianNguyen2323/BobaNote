@@ -1,0 +1,36 @@
+name: BobaNote
+options:
+  deploymentTarget:
+    iOS: "18.0"
+
+packages:
+  BobaNoteCore:
+    path: BobaNoteCore
+
+targets:
+  BobaNote:
+    type: application
+    platform: iOS
+    sources: [BobaNote]
+    dependencies:
+      - package: BobaNoteCore
+    scheme: {}
+    info:
+      path: BobaNote/Info.plist
+      properties:
+        CFBundleDisplayName: Boba Note
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        BobaNoteCommit: $(BOBANOTE_COMMIT)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.briannguyen.bobanote
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "6.0"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        BOBANOTE_COMMIT: dev
