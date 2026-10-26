@@ -169,4 +169,4 @@ Reference vibe: modern boba ordering apps such as 7 Leaves, Hey Tea, Auntea Jenn
 ## Open questions
 
 - Free Supabase projects may pause after about a week with no activity (unverified). Data is kept, but the owner must restore the project in the dashboard. Revisit before friends rely on the app.
-- App icon. `src/app/icon.svg` is a placeholder.
+- App icon. `src/app/icon.svg` is a placeholder. `src/app/apple-icon.png` (180px, square corners because iOS rounds them) is rendered from it with `sharp`, so regenerate it whenever the SVG changes.
